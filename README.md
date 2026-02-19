@@ -4,6 +4,11 @@
 
 ---
 
+![ESP32-CAM Dashboard Screenshot](screenshot.png)
+
+---
+
+
 ## 📸 미리보기
 
 | 기능 | 설명 |
