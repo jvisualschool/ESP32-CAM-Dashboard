@@ -1,6 +1,7 @@
 # 📡 ESP32-CAM Performance Console
 
-> AI Thinker ESP32-CAM 모듈을 활용한 **실시간 MJPEG 스트리밍 + 시스템 대시보드** 프로젝트
+> AI Thinker ESP32-CAM 모듈을 활용한 **실시간 스트리밍 + 시스템 대시보드** 프로젝트  
+> PlatformIO + Arduino Framework 기반, 단일 포트(80) 완전 안정화 버전
 
 ---
 
@@ -8,15 +9,15 @@
 
 ---
 
-
-## 📸 미리보기
+## ✨ 주요 기능
 
 | 기능 | 설명 |
 |------|------|
-| 🎥 실시간 스트리밍 | QVGA(320×240) MJPEG, 목표 ~10 FPS |
-| 📊 실시간 대시보드 | FPS, 신호세기, 여유 메모리, 업타임 |
-| 🔧 장비 정보 패널 | 칩, CPU, Flash, PSRAM, IP/MAC 등 |
-| 📸 정지 화면 캡처 | `/capture` 엔드포인트로 JPEG 다운로드 |
+| 🎥 실시간 영상 | JS fetch 폴링 방식 — cross-origin 문제 없이 100% 안정적 |
+| 📊 실시간 대시보드 | FPS, 신호세기(RSSI), 여유 메모리, 업타임 1초 주기 갱신 |
+| 🔧 장비 정보 패널 | 칩, CPU, Flash, PSRAM, IP/MAC, WiFi SSID 등 자동 표시 |
+| 📸 스냅샷 | `/capture` 엔드포인트로 즉시 JPEG 다운로드 |
+| ⚡ 단일 포트(80) | 포트 분리 없이 모든 기능 제공, 방화벽 이슈 없음 |
 
 ---
 
@@ -28,20 +29,20 @@
 | **MCU** | ESP32-D0WD (Dual Core, 240MHz) |
 | **카메라** | OV2640 (최대 2MP) |
 | **Flash** | 4MB SPI Flash |
-| **PSRAM** | 4MB PSRAM (고속 프레임 버퍼 사용) |
+| **PSRAM** | 4MB PSRAM (고속 프레임 버퍼) |
 | **WiFi** | 802.11 b/g/n (2.4GHz) |
-| **USB-UART** | FTDI / CH340 업로드 어댑터 필요 |
+| **업로드** | USB-UART 어댑터 (FTDI / CH340) 필요 |
 
 ---
 
-## 📦 소프트웨어 & 의존성
+## 📦 소프트웨어 스택
 
-| 항목 | 버전 |
+| 항목 | 내용 |
 |------|------|
-| Framework | Arduino for ESP32 |
-| Build Tool | PlatformIO |
-| Platform | espressif32 |
-| Board | `esp32cam` |
+| Build Tool | **PlatformIO** |
+| Framework | **Arduino for ESP32** |
+| Platform | `espressif32` |
+| Board Target | `esp32cam` |
 | Camera Library | `esp_camera.h` (ESP-IDF 내장) |
 | HTTP Server | `esp_http_server.h` (ESP-IDF 내장) |
 
@@ -54,8 +55,9 @@
 ├── src/
 │   └── esp32cam.cpp        # 메인 소스 (카메라, 서버, 스트리밍)
 ├── include/
-│   └── secrets.h           # WiFi 인증 정보 (SSID / PASSWORD)
+│   └── secrets.h           # WiFi 인증 정보 ← Git 제외됨
 ├── platformio.ini          # PlatformIO 빌드 설정
+├── screenshot.png          # 대시보드 스크린샷
 └── README.md
 ```
 
@@ -69,7 +71,7 @@
 | XCLK | 0 |
 | SIOD | 26 |
 | SIOC | 27 |
-| Y2~Y9 | 5, 18, 19, 21, 36, 39, 34, 35 |
+| Y2 ~ Y9 | 5, 18, 19, 21, 36, 39, 34, 35 |
 | VSYNC | 25 |
 | HREF | 23 |
 | PCLK | 22 |
@@ -78,14 +80,14 @@
 
 ## 🔑 WiFi 설정
 
-`include/secrets.h` 파일에 아래 내용을 작성합니다:
+`include/secrets.h` 파일을 생성하고 아래 내용을 입력하세요:
 
 ```cpp
 #define WIFI_SSID     "your_wifi_ssid"
 #define WIFI_PASSWORD "your_wifi_password"
 ```
 
-> ⚠️ `secrets.h` 는 `.gitignore`에 추가하여 공개 저장소에 업로드하지 마세요.
+> ⚠️ `secrets.h`는 `.gitignore`에 포함되어 있어 저장소에 업로드되지 않습니다.
 
 ---
 
@@ -93,17 +95,17 @@
 
 ### 1. 사전 준비
 
-- [PlatformIO](https://platformio.org/) 설치 (VS Code 확장 또는 CLI)
-- USB-UART 어댑터 연결 후 ESP32-CAM의 `IO0` 핀을 `GND`에 연결 (업로드 모드 진입)
+- [PlatformIO](https://platformio.org/) 설치
+- USB-UART 어댑터로 ESP32-CAM 연결
+- 업로드 전 `IO0` 핀을 `GND`에 연결 (플래싱 모드 진입)
 
-### 2. `platformio.ini` 포트 설정
+### 2. 포트 설정 (`platformio.ini`)
 
 ```ini
-upload_port = /dev/cu.usbserial-210   ; macOS 예시
+upload_port  = /dev/cu.usbserial-210   ; macOS
 monitor_port = /dev/cu.usbserial-210
+; Windows: COM3 등으로 변경
 ```
-
-> Windows의 경우 `COM3` 등으로 변경
 
 ### 3. 빌드 & 업로드
 
@@ -111,34 +113,39 @@ monitor_port = /dev/cu.usbserial-210
 # 빌드 + 업로드
 pio run -t upload
 
-# 시리얼 모니터 (업로드 후 IO0 핀 GND 해제)
+# 시리얼 모니터 (업로드 완료 후 IO0-GND 연결 해제)
 pio device monitor -b 115200
+```
+
+시리얼 모니터에 아래 메시지가 출력되면 성공입니다:
+```
+[OK] PSRAM:Found
+http://192.168.x.x
+[OK] HTTP server on port 80
 ```
 
 ---
 
 ## 🌐 웹 인터페이스
 
-ESP32가 WiFi에 연결되면 시리얼 모니터에 IP 주소가 출력됩니다:
+브라우저에서 시리얼 모니터에 출력된 IP로 접속합니다:
 
 ```
 http://192.168.0.126
 ```
 
-### API 엔드포인트
+### API 엔드포인트 (포트 80)
 
 | 경로 | 설명 |
 |------|------|
 | `GET /` | 대시보드 웹 페이지 |
-| `GET /stream` | MJPEG 실시간 스트리밍 |
+| `GET /capture` | JPEG 정지 이미지 반환 (스트리밍에도 사용) |
 | `GET /status` | 시스템 상태 JSON |
-| `GET /capture` | JPEG 정지 이미지 |
 
 ### `/status` 응답 예시
 
 ```json
 {
-  "fps": 9.8,
   "rssi": -44,
   "heap": 163840,
   "uptime": 138,
@@ -147,57 +154,61 @@ http://192.168.0.126
   "flash_mb": 4,
   "psram_kb": 4096,
   "resolution": "QVGA(320x240)",
-  "quality": 30,
+  "quality": 12,
   "ip": "192.168.0.126",
   "mac": "E0:8C:FE:B6:1A:50",
   "ssid": "MyWiFi",
-  "min_heap": 155648
+  "min_heap": 130000
 }
 ```
 
 ---
 
-## 📐 카메라 설정 (성능 튜닝)
+## 🏗 아키텍처 (V16)
 
-현재 설정 (`PSRAM 있는 경우`):
-
-```cpp
-cfg.frame_size   = FRAMESIZE_QVGA;  // 320 x 240
-cfg.jpeg_quality = 30;              // 1(최고화질)~63(최저화질) — 높을수록 파일 작아 FPS ↑
-cfg.fb_count     = 3;               // 트리플 버퍼링으로 연속 캡처 최적화
+```
+┌─── HTTP Server (Port 80) ─────────────────────────────────┐
+│  GET /           → 대시보드 HTML 반환                      │
+│  GET /capture    → JPEG 1장 반환 (즉시 완료)               │
+│  GET /status     → JSON 시스템 정보 반환 (즉시 완료)       │
+└───────────────────────────────────────────────────────────┘
+            ↑ 1초마다           ↑ 최대한 빠르게 반복
+         /status 호출         /capture 반복 호출
+            │                        │
+┌─── Browser JavaScript ────────────────────────────────────┐
+│  poll()       → RSSI, Heap, Uptime 갱신 (1초 주기)        │
+│  captureLoop() → fetch('/capture') → Blob URL → <img> 교체 │
+│               → FPS 클라이언트 측 직접 계산               │
+└───────────────────────────────────────────────────────────┘
 ```
 
-### FPS vs 화질 가이드
+**왜 JS 폴링 방식인가?**
 
-| 해상도 | JPEG Quality | 예상 FPS | 비고 |
-|--------|-------------|---------|------|
-| QQVGA (160×120) | 25 | ~15 FPS | 고속, 화질 낮음 |
-| QVGA (320×240) | 30 | **~10 FPS** ← 현재 | 균형 |
-| QVGA (320×240) | 12 | ~2 FPS | 고화질, 느림 |
-| VGA (640×480) | 35 | ~3 FPS | 고해상도 |
+| 방식 | 문제점 |
+|------|--------|
+| MJPEG (단일 포트 80) | httpd 블로킹 → 대시보드 먹통 |
+| MJPEG (포트 81 분리) | 브라우저 cross-origin 정책으로 `<img>` 렌더링 차단 |
+| **JS `/capture` 폴링** ✅ | 동일 포트, 동일 출처, 완전 안정적 |
 
 ---
 
-## 🏗 아키텍처
+## 📐 카메라 설정
 
-```
-┌─── HTTP Server (Port 80) ────────────────────────┐
-│  GET /           → HTML 대시보드 반환             │
-│  GET /status     → JSON 시스템 정보 반환          │
-│  GET /capture    → JPEG 정지 이미지 반환          │
-│  GET /stream     → 소켓 FD만 빼고 즉시 반환       │
-└──────────────────────────────────────────────────┘
-            │ httpd_req_to_sockfd()
-            ▼
-┌─── FreeRTOS Stream Task (Core 1) ────────────────┐
-│  while(true):                                    │
-│    esp_camera_fb_get() → JPEG 캡처               │
-│    send() [블로킹] → 클라이언트로 전송            │
-│    FPS 집계 (1초마다 갱신)                        │
-└──────────────────────────────────────────────────┘
+현재 설정 (PSRAM 있는 경우):
+
+```cpp
+cfg.frame_size   = FRAMESIZE_QVGA;  // 320 × 240
+cfg.jpeg_quality = 12;              // 1(최고화질) ~ 63(최저화질)
+cfg.fb_count     = 2;               // 더블 버퍼링
 ```
 
-> MJPEG 스트리밍을 **별도 FreeRTOS 태스크**로 분리하여 httpd 워커가 `/status` 등 다른 요청을 동시에 처리할 수 있도록 설계
+### FPS 가이드
+
+| 해상도 | JPEG Quality | 예상 FPS |
+|--------|-------------|---------|
+| QQVGA (160×120) | 25 | ~10-15 FPS |
+| QVGA (320×240) | 12 | **~5-8 FPS** ← 현재 |
+| QVGA (320×240) | 50 | ~8-12 FPS (화질 저하) |
 
 ---
 
@@ -205,11 +216,23 @@ cfg.fb_count     = 3;               // 트리플 버퍼링으로 연속 캡처 �
 
 | 증상 | 원인 | 해결 |
 |------|------|------|
-| 업로드 안 됨 | IO0 핀이 GND에 연결 안 됨 | IO0–GND 연결 후 재시도 |
-| 영상 안 나옴 | 포트 차단 또는 서버 과부하 | 브라우저 새로고침, IP 확인 |
-| FPS 매우 낮음 | 화질 설정이 높거나 WiFi 신호 약함 | `jpeg_quality` 값 올리기, AP 가까이 이동 |
-| 대시보드 수치 0 | httpd 워커 점유 | 현재 아키텍처(별도 태스크)로 해결됨 |
-| 카메라 초기화 실패 | 핀 오결선 또는 전원 불안정 | 5V 전원 확인, 핀 재확인 |
+| 업로드 안 됨 | IO0 핀이 GND에 미연결 | IO0-GND 연결 후 재시도 |
+| 영상 검은 화면 | 이전 MJPEG 방식의 cross-origin 차단 | V16은 해결됨 (JS 폴링) |
+| FPS 매우 낮음 | WiFi 신호 약함 또는 화질 설정 | AP 가까이 이동, `jpeg_quality` 값 올리기 |
+| 대시보드 수치 0 | 이전 httpd 블로킹 문제 | V16은 해결됨 (단일 포트, 빠른 핸들러) |
+| 카메라 초기화 실패 | 전원 불안정 또는 핀 오결선 | 5V 전원 확인, 핀 재확인 |
+
+---
+
+## 📝 버전 이력
+
+| 버전 | 주요 변경 |
+|------|---------|
+| V16 | JS 폴링 스트리밍 도입, 단일 포트 완전 안정화 |
+| V15 | Raw TCP MJPEG 서버 (포트 81) |
+| V14 | httpd 이원화 (포트 80/81) |
+| V12 | FreeRTOS 별도 스트리밍 태스크 |
+| V1~V11 | MJPEG 단일 포트 최적화 반복 |
 
 ---
 
