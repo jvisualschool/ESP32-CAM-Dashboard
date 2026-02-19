@@ -75,7 +75,7 @@ static const char INDEX_HTML[] = R"rawhtml(
 <div class="main">
   <div class="viewer">
     <div class="live-tag"><span class="dot"></span><span id="tag">CONNECTING</span>&nbsp;|&nbsp;<span id="tf">0.0</span> FPS</div>
-    <img id="stream" src="" onerror="setTimeout(()=>{this.src=streamUrl()+'?t='+Date.now()},2000)">
+    <img id="stream" src="" onerror="setTimeout(()=>{this.src='http://'+location.hostname+':81?t='+Date.now()},2000)">
   </div>
   <div class="side">
     <div class="card"><div class="card-label">Real-time FPS</div><div class="card-value" id="fps">0.0</div></div>
